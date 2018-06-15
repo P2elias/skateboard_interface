@@ -6,11 +6,14 @@
  */ 
 
 #include <avr/io.h>
+#include "system.h"
 
 
 int main(void)
 {
-    /* Replace with your application code */
+	initGPIOs();
+	setLEDsBatteryPower(4);
+	
     while (1) 
     {
     }

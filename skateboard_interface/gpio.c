@@ -1,5 +1,5 @@
 #include <avr/io.h>
-#include "logger.h"
+//#include "logger.h"
 
 #define TRISTATE_INPUT 0
 #define TRISTATE_OUTPUT 1
@@ -29,7 +29,7 @@
 
 void initGPIOs()
 {
-    logMsgLn("Init GPIOs...");
+    //logMsgLn("Init GPIOs...");
 
     TRISTATE_LEDS |= ((TRISTATE_OUTPUT<<PIN_LED0) | (TRISTATE_OUTPUT<<PIN_LED1) | (TRISTATE_OUTPUT<<PIN_LED2) | (TRISTATE_OUTPUT<<PIN_LED3));
     TRISTATE_POWER_LED |= (TRISTATE_OUTPUT<<PIN_POWER_LED);

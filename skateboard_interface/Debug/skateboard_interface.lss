@@ -3,27 +3,29 @@ skateboard_interface.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800200  00800200  00000154  2**0
+  0 .data         00000000  00800200  00800200  0000019a  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         00000100  00000000  00000000  00000054  2**1
+  1 .text         00000146  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .comment      00000030  00000000  00000000  00000154  2**0
+  2 .comment      00000030  00000000  00000000  0000019a  2**0
                   CONTENTS, READONLY
-  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000184  2**2
+  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  000001cc  2**2
                   CONTENTS, READONLY
-  4 .debug_aranges 00000020  00000000  00000000  000001c4  2**0
+  4 .debug_aranges 00000068  00000000  00000000  0000020c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   00000c39  00000000  00000000  000001e4  2**0
+  5 .debug_info   00000dae  00000000  00000000  00000274  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 00000b63  00000000  00000000  00000e1d  2**0
+  6 .debug_abbrev 00000c38  00000000  00000000  00001022  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   00000232  00000000  00000000  00001980  2**0
+  7 .debug_line   000003d5  00000000  00000000  00001c5a  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000024  00000000  00000000  00001bb4  2**2
+  8 .debug_frame  00000098  00000000  00000000  00002030  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000554  00000000  00000000  00001bd8  2**0
+  9 .debug_str    000005d0  00000000  00000000  000020c8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 00000010  00000000  00000000  0000212c  2**0
+ 10 .debug_loc    00000074  00000000  00000000  00002698  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000048  00000000  00000000  0000270c  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -153,23 +155,110 @@ Disassembly of section .text:
   ee:	cd bf       	out	0x3d, r28	; 61
   f0:	00 e0       	ldi	r16, 0x00	; 0
   f2:	0c bf       	out	0x3c, r16	; 60
-  f4:	02 d0       	rcall	.+4      	; 0xfa <main>
-  f6:	02 c0       	rjmp	.+4      	; 0xfc <_exit>
+  f4:	22 d0       	rcall	.+68     	; 0x13a <main>
+  f6:	25 c0       	rjmp	.+74     	; 0x142 <_exit>
 
 000000f8 <__bad_interrupt>:
   f8:	83 cf       	rjmp	.-250    	; 0x0 <__vectors>
 
-000000fa <main>:
+000000fa <initGPIOs>:
 
+void initGPIOs()
+{
+    //logMsgLn("Init GPIOs...");
+
+    TRISTATE_LEDS |= ((TRISTATE_OUTPUT<<PIN_LED0) | (TRISTATE_OUTPUT<<PIN_LED1) | (TRISTATE_OUTPUT<<PIN_LED2) | (TRISTATE_OUTPUT<<PIN_LED3));
+  fa:	81 b1       	in	r24, 0x01	; 1
+  fc:	8e 61       	ori	r24, 0x1E	; 30
+  fe:	81 b9       	out	0x01, r24	; 1
+    TRISTATE_POWER_LED |= (TRISTATE_OUTPUT<<PIN_POWER_LED);
+ 100:	08 9a       	sbi	0x01, 0	; 1
+    TRISTATE_PIEZO |= (TRISTATE_OUTPUT<<PIN_PIEZO);
+ 102:	0d 9a       	sbi	0x01, 5	; 1
+    TRISTATE_BRIDGE_DRIVER |= ((TRISTATE_OUTPUT<<PIN_EN_GATE) | (TRISTATE_INPUT<<PIN_PWRGD) | (TRISTATE_INPUT<<PIN_nFAULT) | (TRISTATE_INPUT<<PIN_DC_CAL));
+ 104:	e4 e0       	ldi	r30, 0x04	; 4
+ 106:	f1 e0       	ldi	r31, 0x01	; 1
+ 108:	80 81       	ld	r24, Z
+ 10a:	81 60       	ori	r24, 0x01	; 1
+ 10c:	80 83       	st	Z, r24
+ 10e:	08 95       	ret
+
+00000110 <setLEDsBatteryPower>:
+batteryPower = 3: Leds 1,2 & 3 on
+batteryPower > 3: All leds on
+*/
+void setLEDsBatteryPower(char batteryPower)
+{
+    if(batteryPower>3)
+ 110:	84 30       	cpi	r24, 0x04	; 4
+ 112:	10 f0       	brcs	.+4      	; 0x118 <setLEDsBatteryPower+0x8>
+    {
+        PORT_LEDS |= (1<<PIN_LED3);
+ 114:	14 9a       	sbi	0x02, 4	; 2
+ 116:	01 c0       	rjmp	.+2      	; 0x11a <setLEDsBatteryPower+0xa>
+    }
+    else
+    {
+        PORT_LEDS &= ~(1<<PIN_LED3);
+ 118:	14 98       	cbi	0x02, 4	; 2
+    }
+
+    if(batteryPower>2)
+ 11a:	83 30       	cpi	r24, 0x03	; 3
+ 11c:	10 f0       	brcs	.+4      	; 0x122 <setLEDsBatteryPower+0x12>
+    {
+        PORT_LEDS |= (1<<PIN_LED2);
+ 11e:	13 9a       	sbi	0x02, 3	; 2
+ 120:	01 c0       	rjmp	.+2      	; 0x124 <setLEDsBatteryPower+0x14>
+    }
+    else
+    {
+        PORT_LEDS &= ~(1<<PIN_LED2);
+ 122:	13 98       	cbi	0x02, 3	; 2
+    }
+
+    if(batteryPower>1)
+ 124:	82 30       	cpi	r24, 0x02	; 2
+ 126:	10 f0       	brcs	.+4      	; 0x12c <setLEDsBatteryPower+0x1c>
+    {
+        PORT_LEDS |= (1<<PIN_LED1);
+ 128:	12 9a       	sbi	0x02, 2	; 2
+ 12a:	01 c0       	rjmp	.+2      	; 0x12e <setLEDsBatteryPower+0x1e>
+    }
+    else
+    {
+        PORT_LEDS &= ~(1<<PIN_LED1);
+ 12c:	12 98       	cbi	0x02, 2	; 2
+    }
+
+    if(batteryPower>0)
+ 12e:	88 23       	and	r24, r24
+ 130:	11 f0       	breq	.+4      	; 0x136 <setLEDsBatteryPower+0x26>
+    {
+        PORT_LEDS |= (1<<PIN_LED0);
+ 132:	11 9a       	sbi	0x02, 1	; 2
+ 134:	08 95       	ret
+    }
+    else
+    {
+        PORT_LEDS &= ~(1<<PIN_LED0);
+ 136:	11 98       	cbi	0x02, 1	; 2
+ 138:	08 95       	ret
+
+0000013a <main>:
 #include <avr/io.h>
+#include "system.h"
 
 
 int main(void)
 {
-  fa:	ff cf       	rjmp	.-2      	; 0xfa <main>
+ 13a:	df df       	rcall	.-66     	; 0xfa <initGPIOs>
+ 13c:	84 e0       	ldi	r24, 0x04	; 4
+ 13e:	e8 df       	rcall	.-48     	; 0x110 <setLEDsBatteryPower>
+ 140:	ff cf       	rjmp	.-2      	; 0x140 <main+0x6>
 
-000000fc <_exit>:
-  fc:	f8 94       	cli
+00000142 <_exit>:
+ 142:	f8 94       	cli
 
-000000fe <__stop_program>:
-  fe:	ff cf       	rjmp	.-2      	; 0xfe <__stop_program>
+00000144 <__stop_program>:
+ 144:	ff cf       	rjmp	.-2      	; 0x144 <__stop_program>
