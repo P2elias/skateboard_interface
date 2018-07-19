@@ -104,6 +104,24 @@ void setEnableCompC(char enable);
 // gpios
 void initGPIOs();
 
+// adc
+void initADC();
+int readADC(int adc_channel);
+
+// taster (Hauptschalter / Selbsthaltung Überbrückung)
+char readTaster();
+
+// Schaltet Eingangsspannung auf den Ausgang (zum Motorenkontroller) 
+void enablePVDD2(char state);
+
+// Gibt dem Motorenkontroller die Freigabe, den Betrieb aufzunehmen
+void enableMotorController(char state);
+
+// Schaltet Selbsthaltung ein
+void enableSelbsthaltung(char state);
+
+
+
 /** sets the 4 leds to visualize the battery power
 batteryPower = 0: All leds off
 batteryPower = 1: Led 1 on

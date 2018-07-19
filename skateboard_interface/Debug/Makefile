@@ -38,7 +38,8 @@ SUBDIRS :=
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
 ../gpio.c \
-../main.c
+../main.c \
+../uart.c
 
 
 PREPROCESSING_SRCS += 
@@ -49,19 +50,23 @@ ASM_SRCS +=
 
 OBJS +=  \
 gpio.o \
-main.o
+main.o \
+uart.o
 
 OBJS_AS_ARGS +=  \
 gpio.o \
-main.o
+main.o \
+uart.o
 
 C_DEPS +=  \
 gpio.d \
-main.d
+main.d \
+uart.d
 
 C_DEPS_AS_ARGS +=  \
 gpio.d \
-main.d
+main.d \
+uart.d
 
 OUTPUT_FILE_PATH +=skateboard_interface.elf
 
@@ -77,6 +82,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 
