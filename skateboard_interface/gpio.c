@@ -1,4 +1,15 @@
+/*
+ * uart.c
+ *
+ * Created: 15.06.2018
+ *  Author: elias.rotzler
+ * Strucktur und kleine Teile aus dem P4 übernommen und auf das P6 angepasst
+ * Kommentare auf Englisch stammen entweder aus dem Datenblatt zum Kontroller oder mehrheitlich aus dem P4
+ * Kommentare auf Deutsch stammen aus dem P6
+ */ 
+
 #include <avr/io.h>
+//#include <system.h>
 //#include "logger.h"
 
 #define TRISTATE_INPUT 0
@@ -22,11 +33,11 @@
 #define PIN_PIEZO_PIN PINA
 #define PIN_PIEZO 5
 
-// Wird verwendet um die LED2 blinken und den PIEZZO ertönen zu lassen 
-#define nTIMES 10
+// Wird verwendet um eine LED blinken zu lassen (solange dies noch nicht mittels Timer gelöst wird)
+#define nTIMES 100
 static int countToToggle = nTIMES;
-//static int countToToggle2 = nTIMES;
 
+// definieren der Ports und DDR
 #define PORT_EN_CNTRLLR PORTG
 #define TRISTATE_EN_CNTRLLR DDRG
 #define PIN_EN_CNTRLLR 4
@@ -70,17 +81,8 @@ static int countToToggle = nTIMES;
 #define PIN_ABGLEICH_NOSE_NEUTRAL 6
 #define PIN_ABGLEICH_NOSE_MAX 7
 
-//#define PORT_BRIDGE_DRIVER PORTJ
-//#define TRISTATE_BRIDGE_DRIVER DDRJ
-//#define PIN_EN_GATE 0
-//#define PIN_PWRGD 4
-//#define PIN_nOCTW 3
-//#define PIN_nFAULT 2
-//#define PIN_DC_CAL 1
-
 void initGPIOs()
 {
-    //logMsgLn("Init GPIOs...");
     TRISTATE_LEDS |= ((TRISTATE_OUTPUT<<PIN_LED2) | (TRISTATE_OUTPUT<<PIN_LED3) | (TRISTATE_OUTPUT<<PIN_LED4) | (TRISTATE_OUTPUT<<PIN_LED5));
     TRISTATE_POWER_LED |= (TRISTATE_OUTPUT<<PIN_POWER_LED);
     TRISTATE_PIEZO |= (TRISTATE_OUTPUT<<PIN_PIEZO);
@@ -124,14 +126,15 @@ void setPiezoSound(char state)
 
 /** sets the 4 leds to visualize the battery power
 batteryPower = 0: All leds off
-batteryPower = 1: Led 1 on
-batteryPower = 2: Leds 1 & 2 on
-batteryPower = 3: Leds 1,2 & 3 on
-batteryPower > 3: All leds on
+batteryPower = 1: Led 1 Toggle
+batteryPower = 2: Led 1 on
+batteryPower = 3: Leds 1 & 2 on
+batteryPower = 4: Leds 1,2 & 3 on
+batteryPower > 4: All leds on
 */
 void setLEDsBatteryPower(char batteryPower)
 {	
-    if(batteryPower>3)
+    if(batteryPower>4)
     {
         PORT_LEDS |= (1<<PIN_LED5);
     }
@@ -140,7 +143,7 @@ void setLEDsBatteryPower(char batteryPower)
         PORT_LEDS &= ~(1<<PIN_LED5);
     }
 
-    if(batteryPower>2)
+    if(batteryPower>3)
     {
         PORT_LEDS |= (1<<PIN_LED4);
     }
@@ -149,7 +152,7 @@ void setLEDsBatteryPower(char batteryPower)
         PORT_LEDS &= ~(1<<PIN_LED4);
     }
 
-    if(batteryPower>1)
+    if(batteryPower>2)
     {
         PORT_LEDS |= (1<<PIN_LED3);
     }
@@ -157,40 +160,30 @@ void setLEDsBatteryPower(char batteryPower)
     {
         PORT_LEDS &= ~(1<<PIN_LED3);
     }
-
+	
+	 if(batteryPower>1)
+	 {
+		 PORT_LEDS |= (1<<PIN_LED2);
+	 }
+	
     if(batteryPower>0)
     {
-        PORT_LEDS |= (1<<PIN_LED2);
-		PORT_PIEZO &= ~(1<<PIN_PIEZO);
+		 if (countToToggle)
+		 {
+			 countToToggle -= 1;
+		 }
+		 else
+		 {
+			 PIN_LEDs |= (1<<PIN_LED2);
+			 PIN_PIEZO_PIN |= (1<<PIN_PIEZO);
+			 countToToggle = nTIMES;
+		 }
     }
-    else
-    {
-		if (countToToggle)
-		{
-			countToToggle -= 1;
-			//PORT_LEDS |= (1<<PIN_LED2);
-			//setPiezoSound(1);
-		}
-		else
-		{
-			PIN_LEDs |= (1<<PIN_LED2);
-			PIN_PIEZO_PIN |= (1<<PIN_PIEZO);
-			countToToggle = nTIMES;
-			/*if (countToToggle2)
-			{
-				countToToggle2 -= 1;
-				PORT_LEDS &= ~(1<<PIN_LED2);
-				setPiezoSound(0);
-			}
-			else
-			{
-				countToToggle = nTIMES;
-				countToToggle2 = nTIMES;
-			}*/
-			
-		}
-        
-    }
+	else
+	{
+		PORT_LEDS &= ~(1<<PIN_LED2);
+	}
+
 }
 
 /** enable Selbsthaltung
@@ -242,18 +235,6 @@ void enablePVDD2(char state)
 	}
 }
 
-/*void setDC_cal(uint8_t state)
-{
-    if(state)
-    {
-        PORT_BRIDGE_DRIVER |= (1<<PIN_DC_CAL);
-    }
-    else
-    {
-        PORT_BRIDGE_DRIVER &= ~(1<<PIN_DC_CAL);
-    }
-}*/
-
 /** Taster auslesen (Hauptschalter), (Selbsthaltung Überbrückung)
 state >= 1: turn selbsthaltung on
 state = 0: turn selbsthaltung off
@@ -265,6 +246,7 @@ char readTaster()
 	return state;
 }
 
+// ADC funktion die jenach Übergabeparameter den entsprechenden Kanal konvertiert
 int readADC(int adc_channel){
 	ADMUX = (1 << REFS0);
 	ADCSRB = 0;

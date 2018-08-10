@@ -3,6 +3,7 @@
  *
  * Created: 18.07.2018 11:24:37
  *  Author: elias.rotzler
+ * übernommen aus dem P4 und angepasst auf das P6
  */ 
 
 #include "system.h"
@@ -16,6 +17,7 @@ Wenn gelesen: Empfangene Daten von Receive Data Buffer Register (RXB)
 Wenn beschrieben: Daten auf Data Buffer Register (TXB) schreiben
 -> nur beschreibbar wenn UDREn Flag in UCSRAnA Register gesetzt (sonst ignoriert)*/
 #define UART_SEND_DATA UDR0
+#define UART_RECEIVE_DATA UDRE0
 
 /** UCSRnA – USART Control and Status Register A p.219
 |7      |6      |5      |4      |3      |2      |1      |0      |
@@ -59,7 +61,7 @@ UCSZn2: Character Size n
 RXB8n: Receive Data Bit 8 n
 TXB8n: Transmit Data Bit 8 n
 -> neuntes Datenbyt wenn mit 9 Bit gearbeitet wird*/
-#define UART_REGISTER_B_VALUE ((0<<RXCIE0) | (0<<TXCIE0) | (0<<UDRIE0) | (0<<RXEN0) | (1<<TXEN0) | (1<<UCSZ02))
+#define UART_REGISTER_B_VALUE ((0<<RXCIE0) | (0<<TXCIE0) | (0<<UDRIE0) | (1<<RXEN0) | (1<<TXEN0) | (1<<UCSZ02))
 #define UART_REGISTER_B UCSR0B
 
 /** UCSRnC – USART Control and Status Register n C p.221
@@ -107,7 +109,7 @@ Table 22-12 p.226
 #define UART_BAUD_RATE_HIGH_BYTE UBRR0H
 #define UART_BAUD_RATE_LOW_BYTE UBRR0L
 #define UART_BAUD_RATE_HIGH_BYTE_VALUE 0
-#define UART_BAUD_RATE_LOW_BYTE_VALUE 32;
+#define UART_BAUD_RATE_LOW_BYTE_VALUE 16 // 32 bei 16 MHz; 16 bei 8 MHz (Anpassung im P6)
 
 /** Benutzung Linux
 ttyACM3
